@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HUNTED BOT - Roblox Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+    
+    :root {
+      --primary: #dc2626;
+      --primary-dark: #991b1b;
+      --bg: #000000;
+      --surface: #0a0a0a;
+    }
+    
+    body { 
+      background: var(--bg); 
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    /* Mobile Sidebar */
+    .sidebar-mobile {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100vh;
+      background: #0a0a0a;
+      border-right: 1px solid rgba(220, 38, 38, 0.2);
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+    
+    .sidebar-mobile.open {
+      transform: translateX(0);
+    }
+    
+    /* Desktop Sidebar */
+    @media (min-width: 1024px) {
+      .sidebar-mobile {
+        position: relative;
+        transform: translateX(0);
+        width: 260px;
+        flex-shrink: 0;
+      }
+    }
+    
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    @media (min-width: 1024px) {
+      .overlay { display: none; }
+    }
+    
+    /* Mobile Header */
+    .mobile-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #0a0a0a;
+      border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+    }
+    
+    @media (min-width: 1024px) {
+      .mobile-header { display: none; }
+    }
+    
+    /* Main Content */
+    .main-content {
+      padding-top: 60px;
+      min-height: 100vh;
+    }
+    
+    @media (min-width: 1024px) {
+      .main-content {
+        padding-top: 0;
+        flex: 1;
+      }
+    }
+    
+    /* Layout */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* Glass Card */
+    .glass-card {
+      background: rgba(10, 10, 10, 0.9);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      border-radius: 16px;
+    }
+    
+    /* Button */
+    .btn-primary {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
+    }
+    
+    /* Input */
+    .input {
+      background: #000;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: white;
+      padding: 14px 16px;
+      border-radius: 12px;
+      width: 100%;
+      font-size: 16px;
+    }
+    
+    .input:focus {
+      outline: none;
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    }
+    
+    /* Nav Item */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      color: #9ca3af;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+    }
+    
+    .nav-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+    
+    .nav-item.active {
+      background: rgba(220, 38, 38, 0.15);
+      color: #ef4444;
+      border-color: rgba(220, 38, 38, 0.3);
+    }
+    
+    /* Badge */
+    .badge-owner { 
+      background: rgba(168, 85, 247, 0.2); 
+      color: #a855f7; 
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    
+    .badge-player { 
+      background: rgba(107, 114, 128, 0.2); 
+      color: #9ca3af; 
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(107, 114, 128, 0.3);
+    }
+    
+    /* Toggle */
+    .toggle {
+      width: 50px;
+      height: 28px;
+      background: #374151;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .toggle.active {
+      background: #dc2626;
+    }
+    
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.3s;
+    }
+    
+    .toggle.active::after {
+      transform: translateX(22px);
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 2000;
+    }
+    
+    .modal-content {
+      background: #0a0a0a;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+    }
+    
+    /* Responsive Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    @media (min-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 80px;
+      right: 16px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      color: white;
+      font-weight: 500;
+      z-index: 3000;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .toast.success { background: #16a34a; }
+    .toast.error { background: #dc2626; }
+    
+    @media (min-width: 1024px) {
+      .toast { top: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // SVG Icons
+    const Icons = {
+      menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+      close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      dashboard: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+      search: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+      logs: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+      crown: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>,
+      shield: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+      ban: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>,
+      kick: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>,
+      external: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+      settings: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+      users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    };
+
+    function App() {
+      const [page, setPage] = useState('login');
+      const [user, setUser] = useState(null);
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [searchResults, setSearchResults] = useState([]);
+      const [logs, setLogs] = useState([]);
+      const [stats, setStats] = useState({});
+      const [loading, setLoading] = useState(false);
+      const [toast, setToast] = useState(null);
+      const [admins, setAdmins] = useState([]);
+      const [settings, setSettings] = useState({});
+
+      const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      const login = async (username, password) => {
+        if (username === 'Hovia' && password === 'Curtis2008#') {
+          setUser({ username: 'Hovia', role: 'Owner' });
+          setPage('dashboard');
+          loadDashboard();
+          showToast('Welcome back, Hovia!');
+        } else {
+          showToast('Invalid credentials', 'error');
+        }
+      };
+
+      const loadDashboard = async () => {
+        try {
+          const [statsRes, logsRes, adminsRes, settingsRes] = await Promise.all([
+            fetch('/api/stats').then(r => r.json()),
+            fetch('/api/logs?limit=5').then(r => r.json()),
+            fetch('/api/admins').then(r => r.json()),
+            fetch('/api/settings').then(r => r.json())
+          ]);
+          setStats(statsRes);
+          setLogs(logsRes.logs || []);
+          setAdmins(adminsRes.admins || []);
+          setSettings(settingsRes.settings || {});
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      const searchUsers = async (query) => {
+        if (!query) return;
+        setLoading(true);
+        try {
+          const res = await fetch('/api/users/search?q=' + encodeURIComponent(query));
+          const data = await res.json();
+          setSearchResults(data.users || []);
+        } catch (e) {
+          showToast('Search failed', 'error');
+        }
+        setLoading(false);
+      };
+
+      const banUser = async (userId, reason) => {
+        await fetch('/api/users/' + userId + '/ban', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason, executor: user?.username || 'System' })
+        });
+        showToast('User banned successfully');
+        searchUsers(searchQuery);
+        loadDashboard();
+      };
+
+      const kickUser = async (userId, reason) => {
+        await fetch('/api/users/' + userId + '/kick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason, executor: user?.username || 'System' })
+        });
+        showToast('User kicked successfully');
+        loadDashboard();
+      };
+
+      const updateSettings = async (updates) => {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        setSettings({ ...settings, ...updates });
+        showToast('Settings saved');
+      };
+
+      const closeSidebar = () => setSidebarOpen(false);
+
+      if (page === 'login') {
+        return <LoginPage onLogin={login} />;
+      }
+
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { id: 'search', label: 'User Search', icon: 'search' },
+        { id: 'logs', label: 'Logs', icon: 'logs' },
+        { id: 'owner', label: 'Owner Panel', icon: 'crown' }
+      ];
+
+      return (
+        <div className="app-layout">
+          {/* Mobile Overlay */}
+          <div 
+            className={`overlay ${sidebarOpen ? 'show' : ''}`}
+            onClick={closeSidebar}
+          />
+          
+          {/* Sidebar */}
+          <aside className={`sidebar-mobile ${sidebarOpen ? 'open' : ''}`}>
+            <div style={{padding: '20px', borderBottom: '1px solid rgba(220,38,38,0.2)'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                <div style={{width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #dc2626, #991b1b)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                  {Icons.shield}
+                </div>
+                <div>
+                  <h2 style={{margin: 0, fontSize: 18, fontWeight: 700}}>HUNTED BOT</h2>
+                  <p style={{margin: 0, fontSize: 11, color: '#6b7280'}}>ADMIN PANEL</p>
+                </div>
+              </div>
+            </div>
+            
+            <nav style={{padding: '16px'}}>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setPage(item.id); closeSidebar(); }}
+                  className={`nav-item ${page === item.id ? 'active' : ''}`}
+                  style={{width: '100%', textAlign: 'left', background: 'none', border: page === item.id ? '1px solid rgba(220,38,38,0.3)' : '1px solid transparent', cursor: 'pointer'}}
+                >
+                  {Icons[item.icon]}
+                  <span style={{fontWeight: 500}}>{item.label}</span>
+                </button>
+              ))}
+            </nav>
+            
+            <div style={{padding: '16px', borderTop: '1px solid rgba(220,38,38,0.2)', marginTop: 'auto'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: 12, background: 'rgba(255,255,255,0.05)'}}>
+                <div style={{width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
+                  {user.username[0]}
+                </div>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <p style={{margin: 0, fontWeight: 600, fontSize: 14}}>{user.username}</p>
+                  <span className="badge-owner">{user.role}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+          
+          {/* Main Content */}
+          <div className="main-content" style={{flex: 1}}>
+            {/* Mobile Header */}
+            <div className="mobile-header">
+              <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                <div style={{width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #dc2626, #991b1b)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                  {React.cloneElement(Icons.shield, {width: 18, height: 18})}
+                </div>
+                <span style={{fontWeight: 700, fontSize: 16}}>HUNTED BOT</span>
+              </div>
+              <button 
+                onClick={() => setSidebarOpen(true)}
+                style={{background: 'none', border: 'none', color: 'white', padding: 8, cursor: 'pointer'}}
+              >
+                {Icons.menu}
+              </button>
+            </div>
+            
+            {/* Page Content */}
+            <div style={{padding: '16px', maxWidth: 1400, margin: '0 auto'}}>
+              {toast && (
+                <div className={`toast ${toast.type}`}>
+                  {toast.message}
+                </div>
+              )}
+              
+              <div className="fade-in">
+                {page === 'dashboard' && <DashboardPage stats={stats} logs={logs} />}
+                {page === 'search' && <SearchPage searchQuery={searchQuery} setSearchQuery={setSearchQuery} searchResults={searchResults} searchUsers={searchUsers} loading={loading} banUser={banUser} kickUser={kickUser} />}
+                {page === 'logs' && <LogsPage logs={logs} />}
+                {page === 'owner' && <OwnerPage settings={settings} updateSettings={updateSettings} admins={admins} />}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function LoginPage({ onLogin }) {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        await onLogin(username, password);
+        setIsLoading(false);
+      };
+
+      return (
+        <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', padding: 16}}>
+          <div className="glass-card fade-in" style={{width: '100%', maxWidth: 400, padding: '32px 24px'}}>
+            <div style={{textAlign: 'center', marginBottom: 32}}>
+              <div style={{width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, #dc2626, #991b1b)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'}}>
+                {Icons.shield}
+              </div>
+              <h1 style={{margin: 0, fontSize: 28, fontWeight: 800, background: 'linear-gradient(135deg, #ef4444, #dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>HUNTED BOT</h1>
+              <p style={{margin: '8px 0 0', color: '#6b7280', fontSize: 13, fontWeight: 500, letterSpacing: 1}}>ADMIN DASHBOARD</p>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div style={{marginBottom: 16}}>
+                <label style={{display: 'block', color: '#9ca3af', marginBottom: 6, fontSize: 13, fontWeight: 500}}>Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="input"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+              <div style={{marginBottom: 24}}>
+                <label style={{display: 'block', color: '#9ca3af', marginBottom: 6, fontSize: 13, fontWeight: 500}}>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+              <button type="submit" disabled={isLoading} className="btn-primary" style={{width: '100%'}}>
+                {isLoading ? (
+                  <span style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+                    <div className="spinner" style={{width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%'}}></div>
+                    Signing in...
+                  </span>
+                ) : 'Sign In'}
+              </button>
+            </form>
+            
+            <div style={{textAlign: 'center', marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(220,38,38,0.2)'}}>
+              <p style={{margin: 0, fontSize: 12, color: '#6b7280'}}>
+                Powered by <span style={{color: '#dc2626', fontWeight: 600}}>Hovia Creations</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function DashboardPage({ stats, logs }) {
+      const statCards = [
+        { label: 'Online Players', value: stats.onlinePlayers || 0, color: '#22c55e' },
+        { label: 'Active Bans', value: stats.activeBans || 0, color: '#ef4444' },
+        { label: 'Temp Bans', value: stats.tempBans || 0, color: '#f97316' },
+        { label: 'New Logs', value: stats.newLogs || 0, color: '#3b82f6' }
+      ];
+
+      return (
+        <div>
+          <h1 style={{fontSize: 24, fontWeight: 700, margin: '0 0 4px'}}>Dashboard</h1>
+          <p style={{color: '#6b7280', margin: '0 0 20px'}}>Overview of your admin panel</p>
+          
+          <div className="stats-grid" style={{marginBottom: 24}}>
+            {statCards.map((stat, i) => (
+              <div key={i} className="glass-card" style={{padding: 20}}>
+                <p style={{color: '#6b7280', fontSize: 12, fontWeight: 500, margin: '0 0 8px'}}>{stat.label}</p>
+                <p style={{color: stat.color, fontSize: 28, fontWeight: 700, margin: 0}}>{stat.value.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="glass-card">
+            <div style={{padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+              <h3 style={{margin: 0, fontSize: 16, fontWeight: 600}}>Recent Activity</h3>
+              <span style={{fontSize: 11, color: '#6b7280', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20}}>Last 24h</span>
+            </div>
+            <div>
+              {(logs || []).slice(0, 5).map(log => (
+                <div key={log.id} style={{padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)'}}>
+                  <div>
+                    <p style={{margin: 0, fontWeight: 600, fontSize: 14}}>{log.action}</p>
+                    <p style={{margin: '4px 0 0', color: '#6b7280', fontSize: 13}}>{log.user}</p>
+                  </div>
+                  <div style={{textAlign: 'right'}}>
+                    <p style={{margin: 0, color: '#9ca3af', fontSize: 13}}>{log.executor}</p>
+                    <p style={{margin: '2px 0 0', color: '#4b5563', fontSize: 11}}>{log.timestamp}</p>
+                  </div>
+                </div>
+              ))}
+              {(!logs || logs.length === 0) && (
+                <div style={{padding: 40, textAlign: 'center', color: '#6b7280'}}>
+                  No recent activity
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SearchPage({ searchQuery, setSearchQuery, searchResults, searchUsers, loading, banUser, kickUser }) {
+      const [banModal, setBanModal] = useState(null);
+      const [kickModal, setKickModal] = useState(null);
+      const [reason, setReason] = useState('');
+
+      useEffect(() => {
+        const timeout = setTimeout(() => {
+          if (searchQuery) searchUsers(searchQuery);
+        }, 300);
+        return () => clearTimeout(timeout);
+      }, [searchQuery]);
+
+      return (
+        <div>
+          <h1 style={{fontSize: 24, fontWeight: 700, margin: '0 0 4px'}}>User Search</h1>
+          <p style={{color: '#6b7280', margin: '0 0 20px'}}>Search for Roblox players</p>
+          
+          <div style={{position: 'relative', marginBottom: 20}}>
+            <div style={{position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)'}}>
+              {Icons.search}
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search username..."
+              className="input"
+              style={{paddingLeft: 48}}
+            />
+            {loading && (
+              <div style={{position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)'}}>
+                <div className="spinner" style={{width: 20, height: 20, border: '2px solid rgba(220,38,38,0.3)', borderTopColor: '#dc2626', borderRadius: '50%'}}></div>
+              </div>
+            )}
+          </div>
+          
+          <div style={{display: 'flex', flexDirection: 'column', gap: 12}}>
+            {searchResults.map(user => (
+              <div key={user.id} className="glass-card" style={{padding: 16}}>
+                <div style={{display: 'flex', gap: 16, flexWrap: 'wrap'}}>
+                  <img 
+                    src={user.avatar} 
+                    alt={user.username} 
+                    style={{width: 64, height: 64, borderRadius: 12, border: '2px solid rgba(220,38,38,0.3)'}}
+                  />
+                  <div style={{flex: 1, minWidth: 200}}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6}}>
+                      <h3 style={{margin: 0, fontSize: 18, fontWeight: 700}}>{user.username}</h3>
+                      <span className="badge-player">{user.role}</span>
+                    </div>
+                    <p style={{margin: '0 0 8px', color: '#6b7280', fontSize: 12, fontFamily: 'monospace'}}>ID: {user.id}</p>
+                    <div style={{display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 10}}>
+                      <span style={{display: 'flex', alignItems: 'center', gap: 6, fontSize: 13}}>
+                        <span style={{width: 8, height: 8, borderRadius: '50%', background: user.status === 'Online' ? '#22c55e' : '#6b7280'}}></span>
+                        <span style={{color: user.status === 'Online' ? '#22c55e' : '#9ca3af'}}>{user.status}</span>
+                      </span>
+                      <span style={{color: '#6b7280', fontSize: 13}}>Last seen: {user.lastSeen}</span>
+                    </div>
+                    <a 
+                      href={user.robloxProfile} 
+                      target="_blank" 
+                      style={{color: '#ef4444', fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4}}
+                    >
+                      View Profile {Icons.external}
+                    </a>
+                  </div>
+                  <div style={{display: 'flex', gap: 8, flexDirection: 'column'}}>
+                    <button 
+                      onClick={() => setBanModal(user)} 
+                      style={{padding: '10px 16px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6}}
+                    >
+                      {Icons.ban} Ban
+                    </button>
+                    <button 
+                      onClick={() => setKickModal(user)} 
+                      style={{padding: '10px 16px', background: 'rgba(234,179,8,0.1)', color: '#eab308', border: '1px solid rgba(234,179,8,0.3)', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6}}
+                    >
+                      {Icons.kick} Kick
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {banModal && (
+            <div className="modal-overlay" onClick={() => setBanModal(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <h3 style={{margin: '0 0 8px', fontSize: 20}}>Ban User</h3>
+                <p style={{margin: '0 0 16px', color: '#6b7280'}}>Banning <span style={{color: '#ef4444', fontWeight: 600}}>{banModal.username}</span></p>
+                <textarea 
+                  value={reason} 
+                  onChange={(e) => setReason(e.target.value)} 
+                  placeholder="Reason for ban..." 
+                  className="input"
+                  style={{height: 100, resize: 'none', marginBottom: 16}}
+                />
+                <div style={{display: 'flex', gap: 12}}>
+                  <button 
+                    onClick={() => { banUser(banModal.id, reason); setBanModal(null); setReason(''); }} 
+                    className="btn-primary"
+                    style={{flex: 1}}
+                  >
+                    Ban User
+                  </button>
+                  <button 
+                    onClick={() => { setBanModal(null); setReason(''); }} 
+                    style={{padding: '12px 20px', background: 'transparent', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer'}}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {kickModal && (
+            <div className="modal-overlay" onClick={() => setKickModal(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <h3 style={{margin: '0 0 8px', fontSize: 20}}>Kick User</h3>
+                <p style={{margin: '0 0 16px', color: '#6b7280'}}>Kicking <span style={{color: '#eab308', fontWeight: 600}}>{kickModal.username}</span></p>
+                <textarea 
+                  value={reason} 
+                  onChange={(e) => setReason(e.target.value)} 
+                  placeholder="Reason for kick..." 
+                  className="input"
+                  style={{height: 100, resize: 'none', marginBottom: 16}}
+                />
+                <div style={{display: 'flex', gap: 12}}>
+                  <button 
+                    onClick={() => { kickUser(kickModal.id, reason); setKickModal(null); setReason(''); }} 
+                    style={{flex: 1, padding: '12px 24px', background: '#eab308', color: 'black', border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer'}}
+                  >
+                    Kick User
+                  </button>
+                  <button 
+                    onClick={() => { setKickModal(null); setReason(''); }} 
+                    style={{padding: '12px 20px', background: 'transparent', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer'}}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function LogsPage({ logs }) {
+      return (
+        <div>
+          <h1 style={{fontSize: 24, fontWeight: 700, margin: '0 0 4px'}}>Moderation Logs</h1>
+          <p style={{color: '#6b7280', margin: '0 0 20px'}}>Track all admin actions</p>
+          
+          <div className="glass-card" style={{overflow: 'hidden'}}>
+            <div style={{overflowX: 'auto'}}>
+              <table style={{width: '100%', minWidth: 600, borderCollapse: 'collapse'}}>
+                <thead>
+                  <tr style={{background: 'rgba(255,255,255,0.03)'}}>
+                    {['Action', 'User', 'Executor', 'Reason', 'Time'].map(h => (
+                      <th key={h} style={{padding: '14px 16px', textAlign: 'left', color: '#9ca3af', fontSize: 12, fontWeight: 600, textTransform: 'uppercase'}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(logs || []).map(log => (
+                    <tr key={log.id} style={{borderTop: '1px solid rgba(255,255,255,0.03)'}}>
+                      <td style={{padding: '14px 16px'}}>
+                        <span style={{fontWeight: 600}}>{log.action}</span>
+                      </td>
+                      <td style={{padding: '14px 16px', color: '#d1d5db'}}>{log.user}</td>
+                      <td style={{padding: '14px 16px', color: '#9ca3af'}}>{log.executor}</td>
+                      <td style={{padding: '14px 16px', color: '#9ca3af'}}>{log.reason || '-'}</td>
+                      <td style={{padding: '14px 16px', color: '#6b7280', fontSize: 12, fontFamily: 'monospace'}}>{log.timestamp}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {(!logs || logs.length === 0) && (
+              <div style={{padding: 40, textAlign: 'center', color: '#6b7280'}}>
+                No logs found
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function OwnerPage({ settings, updateSettings, admins }) {
+      const [activeTab, setActiveTab] = useState('settings');
+      const [localSettings, setLocalSettings] = useState(settings);
+
+      useEffect(() => {
+        setLocalSettings(settings);
+      }, [settings]);
+
+      return (
+        <div>
+          <h1 style={{fontSize: 24, fontWeight: 700, margin: '0 0 4px'}}>Owner Panel</h1>
+          <p style={{color: '#6b7280', margin: '0 0 20px'}}>Full system control</p>
+          
+          <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
+            <button 
+              onClick={() => setActiveTab('settings')} 
+              style={{padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none', background: activeTab === 'settings' ? '#dc2626' : 'rgba(255,255,255,0.05)', color: activeTab === 'settings' ? 'white' : '#9ca3af'}}
+            >
+              Settings
+            </button>
+            <button 
+              onClick={() => setActiveTab('admins')} 
+              style={{padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none', background: activeTab === 'admins' ? '#dc2626' : 'rgba(255,255,255,0.05)', color: activeTab === 'admins' ? 'white' : '#9ca3af'}}
+            >
+              Admins
+            </button>
+          </div>
+          
+          {activeTab === 'settings' && (
+            <div className="glass-card" style={{padding: 24}}>
+              <div style={{marginBottom: 20}}>
+                <label style={{display: 'block', color: '#9ca3af', marginBottom: 8, fontSize: 13, fontWeight: 500}}>Site Name</label>
+                <input 
+                  value={localSettings.siteName || ''} 
+                  onChange={(e) => setLocalSettings({ ...localSettings, siteName: e.target.value })} 
+                  className="input"
+                />
+              </div>
+              <div style={{marginBottom: 20}}>
+                <label style={{display: 'block', color: '#9ca3af', marginBottom: 8, fontSize: 13, fontWeight: 500}}>Site Description</label>
+                <input 
+                  value={localSettings.siteDescription || ''} 
+                  onChange={(e) => setLocalSettings({ ...localSettings, siteDescription: e.target.value })} 
+                  className="input"
+                />
+              </div>
+              
+              <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
+                <div>
+                  <p style={{margin: 0, fontWeight: 600}}>User Access</p>
+                  <p style={{margin: '4px 0 0', color: '#6b7280', fontSize: 13}}>Allow users to access panel</p>
+                </div>
+                <div 
+                  className={`toggle ${localSettings.userAccessEnabled ? 'active' : ''}`}
+                  onClick={() => setLocalSettings({ ...localSettings, userAccessEnabled: !localSettings.userAccessEnabled })}
+                ></div>
+              </div>
+              
+              <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
+                <div>
+                  <p style={{margin: 0, fontWeight: 600}}>Maintenance Mode</p>
+                  <p style={{margin: '4px 0 0', color: '#6b7280', fontSize: 13}}>Disable all user access</p>
+                </div>
+                <div 
+                  className={`toggle ${localSettings.maintenanceMode ? 'active' : ''}`}
+                  style={{background: localSettings.maintenanceMode ? '#eab308' : ''}}
+                  onClick={() => setLocalSettings({ ...localSettings, maintenanceMode: !localSettings.maintenanceMode })}
+                ></div>
+              </div>
+              
+              <button 
+                onClick={() => updateSettings(localSettings)} 
+                className="btn-primary"
+                style={{marginTop: 16}}
+              >
+                Save Settings
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'admins' && (
+            <div className="glass-card">
+              <div style={{padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <h3 style={{margin: 0, fontSize: 16, fontWeight: 600}}>Manage Admins</h3>
+                <button className="btn-primary" style={{padding: '8px 16px', fontSize: 13}}>+ Add Admin</button>
+              </div>
+              <div>
+                {(admins || []).map(admin => (
+                  <div key={admin.id} style={{padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)'}}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+                      <div style={{width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, rgba(220,38,38,0.2), rgba(220,38,38,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(220,38,38,0.2)'}}>
+                        <span style={{fontWeight: 700, fontSize: 18, color: '#ef4444'}}>{admin.username[0]}</span>
+                      </div>
+                      <div>
+                        <p style={{margin: 0, fontWeight: 600}}>{admin.username}</p>
+                        <span className={`badge-${admin.role === 'Owner' ? 'owner' : admin.role === 'Admin' ? 'admin' : 'mod'}`} style={{marginTop: 4, display: 'inline-block'}}>{admin.role}</span>
+                      </div>
+                    </div>
+                    {admin.role !== 'Owner' && (
+                      <button style={{padding: '8px 14px', color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer'}}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
